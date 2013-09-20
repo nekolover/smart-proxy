@@ -10,7 +10,13 @@ module Proxy::Puppet
       def scan_directory directory
         # Get a Puppet Parser to parse the manifest source
         Initializer.load
-        parser = Puppet::Parser::Parser.new Puppet::Node::Environment.new
+        if Puppet[:parser] == 'future'
+          require 'puppet/parser'
+          require 'puppet/parser/e_parser_adapter'
+          parser = Puppet::Parser::EParserAdapter.new Puppet::Parser::Parser.new Puppet::Node::Environment.new
+        else
+          parser = Puppet::Parser::Parser.new Puppet::Node::Environment.new
+        end
         Dir.glob("#{directory}/*/manifests/**/*.pp").map do |filename|
           scan_manifest File.read(filename), filename, parser
         end.compact.flatten
